@@ -55,8 +55,10 @@ app.listen(PORT, () => {
 					if(validPassword) {
 						api.getPasswords(login, (passwords) => {
 							req.session.user_id = login;
-							response.status(200).send(JSON.stringify(passwords));
-
+							api.getPrivateKey(login, (res) => {
+								let privateKey = res['private_key'];
+								response.status(200).send(JSON.stringify({passwords: passwords, privateKey: privateKey}));
+							});
 						});
 					} else {
 						console.log('USER NOT VALID PASSWORD');

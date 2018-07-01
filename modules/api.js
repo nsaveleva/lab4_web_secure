@@ -1,6 +1,7 @@
 const _ = require('underscore');
 
 const db = require('./db');
+const forge = require('node-forge');
 const validate = require('./validate');
 const hash = require('./hash');
 
@@ -41,24 +42,49 @@ function deleteService(userId, service, login, callback) {
 		});
 }
 
-function addService(userId, service, login, password, newService, newLogin, callback) {
-	if(validate.checkEmptyAndXss([service, login, password, newService, newLogin])) {
-		db.query(
-			'INSERT INTO passwords VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE password = ?, service = ?, login = ?',
-			[userId, service, login, password, password, newService, newLogin],
-			(res, err) =>
-			{
-				if(err) {
-					callback(false);
+function getPublicKey(userId, callback) {
+	db.query('SELECT public_key FROM rsa_keys WHERE user_id = ?', [userId], (res, err) => {
+		if(err) {
+			callback(false)
+		} else {
+			callback(res[0]['public_key'])
+		}
+	})
+}
 
-				} else {
-					callback(true);
-				}
-			});
-	} else {
-		console.error('service or login or password is empty');
-		callback(false);
-	}
+function addService(userId, service, login, password, newService, newLogin, callback) {
+	getPublicKey(userId, (publicKeyPem) => {
+		let publicKey = forge.pki.publicKeyFromPem(publicKeyPem);
+		if(validate.checkEmptyAndXss([service, login, password, newService, newLogin])) {
+			password = forge.util.encode64(publicKey.encrypt(password));
+			db.query(
+				'INSERT INTO passwords VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE password = ?, service = ?, login = ?',
+				[userId, service, login, password, password, newService, newLogin],
+				(res, err) =>
+				{
+					if(err) {
+						callback(false);
+
+					} else {
+						callback(true);
+					}
+				});
+		} else {
+			console.error('service or login or password is empty');
+			callback(false);
+		}
+	});
+
+}
+
+function getPrivateKey(userId, callback) {
+	db.query('SELECT private_key FROM rsa_keys WHERE user_id = ?', [userId], (res, err) => {
+		if(err) {
+			callback(false)
+		} else {
+			callback(res[0])
+		}
+	})
 }
 
 module.exports = {
@@ -67,4 +93,5 @@ module.exports = {
 	getPasswords: getPasswords,
 	deleteService: deleteService,
 	addService: addService,
+	getPrivateKey: getPrivateKey,
 };

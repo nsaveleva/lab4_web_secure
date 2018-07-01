@@ -110,7 +110,7 @@ function initApp (passwords) {
 				success: () => {
 					console.log('Add success');
 					passwords.push({'service': service, 'login': login, 'password': password});
-					renderMainApp(passwords);
+					renderMainApp(passwords, false);
 					$('.b-popup').remove();
 				},
 				error: (err) => {
@@ -122,11 +122,20 @@ function initApp (passwords) {
 	});
 }
 
-function renderMainApp (passwords) {
+function renderMainApp (passwords, encrypt = true) {
+	let privateKey =  forge.pki.privateKeyFromPem(localStorage.getItem('key'));
+	function decryptPassword (password) {
+		password = forge.util.decode64(password);
+		password = privateKey.decrypt(password);
+		return password;
+	}
 	$('.entries').empty();
 	let oneEntryTemplate = _.template($('#one_entry_password')[0].innerHTML);
 		passwords.forEach((service, i) => {
 			if(_.isEmpty(service)) {return;}
+			if(encrypt) {
+				service.password = decryptPassword(service.password);
+			}
 			$('.entries').append(oneEntryTemplate({service: service, numberOfElement: i}));
 			$('#btn_save_' + i).click((e) => {
 				e.preventDefault();
@@ -236,8 +245,11 @@ function auth () {
 			contentType: 'application/json; charset=UTF-8',
 
 			success: (res) => {
+				let response = JSON.parse(res);
+				let passwords = response['passwords'];
+				let privateKey = response['privateKey'];
+				localStorage.setItem('key', CryptoJS.AES.decrypt(privateKey, password).toString(CryptoJS.enc.Utf8));
 				auth = null; login = null; password = null; // clean secure data
-				let passwords = JSON.parse(res);
 				initApp(passwords);
 			},
 			error: (res) => {

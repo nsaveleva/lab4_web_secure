@@ -16,7 +16,7 @@ CREATE TABLE `passwords` (
   `user_id` CHAR(32) NOT NULL,
   `service` CHAR(255) NOT NULL,
   `login` CHAR(64) NOT NULL,
-  `password` CHAR(64) NOT NULL,
+  `password` TEXT NOT NULL,
   CONSTRAINT FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
   KEY (`login`),
   PRIMARY KEY (`service`, `login`)
