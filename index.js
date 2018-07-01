@@ -1,26 +1,35 @@
-const CONFIG = require('./config.json');
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
-const db = require('./modules/db');
+const helmet = require('helmet'); //security
 const _ = require('underscore');
-const hash = require('./modules/hash');
+
+const CONFIG = require('./config.json');
+const api = require('./modules/api');
+const db = require('./modules/db');
+const validate = require('./modules/validate');
 
 const PORT = process.env.PORT || CONFIG.port;
 app.use(bodyParser.json());
-app.use(function (err, req, res, next) {
+app.use(helmet());
+app.use( (err, req, res, next) =>  {
 	console.error(err.stack);
 	res.status(500).send('Backend Error');
 });
 
-function checkUser(login, password, callback) {
-	db.query('SELECT hash FROM users WHERE user_id = ?', [login], (result) => {
-		if(hash.hashNotEmpty(result)) {
-			return callback(hash.checkPassword(password,result[0].hash));
-		} else {
-			callback(false);
-		}
-	});
+function checkAccess(req, res, next) {
+	if (req.session.user_id) {
+		api.findUser(req.session.user_id, (existUser) => {
+			if(existUser) {
+				next();
+			}
+			else {
+				res.status(403).send('User not found').end();
+			}
+		});
+	} else {
+		res.status(403).send('Access denied').end();
+	}
 }
 
 app.listen(PORT, () => {
@@ -32,28 +41,77 @@ app.listen(PORT, () => {
 			resave: false,
 			saveUninitialized: false
 		}));
+		// Rest API
 
-		app.post('/auth', (req, res) => {
+		app.post('/auth', (req, response) => {
 			let login = req.body.login;
 			let password = req.body.password;
 
 			if(_.isEmpty(login) || _.isEmpty(password)) {
-				res.status(401).send('Not found password or login').end();
+				response.status(401).send('Not found password or login').end();
 			} else {
 				let hash = '';
-				checkUser(login, password, (validPassword) => {
+				api.checkUser(login, password, (validPassword) => {
 					if(validPassword) {
-						res.status(200).send('Valid pass');
-						req.session.user_id = login;
+						api.getPasswords(login, (passwords) => {
+							req.session.user_id = login;
+							response.status(200).send(JSON.stringify(passwords));
+
+						});
 					} else {
 						console.log('USER NOT VALID PASSWORD');
-						res.status(401).send('NOT VALID PASSWORD');
+						response.status(401).send('NOT VALID PASSWORD');
 					}
 				});
 			}
 		});
+
+		app.delete('/auth', (req, response) => {
+			req.session.destroy((err) => {
+				if(err) {
+					console.error(err);
+					response.status(500).send('Cannot destroy session');
+				} else {
+					response.status(200).send(JSON.stringify('Success'));
+				}
+			});
+		});
+
+		app.get('/passwords', checkAccess, (req, response) => {
+			api.getPasswords(req.session.user_id, (passwords) => {
+				response.status(200).send( JSON.stringify(passwords) );
+			});
+		});
+
+		app.delete('/password', checkAccess, (req, response) => {
+			let login = req.body.login;
+			let service = req.body.service;
+			api.deleteService(req.session.user_id, service, login, (result) => {
+				if (result) {
+					response.status(200).send(JSON.stringify('success'));
+				} else {
+					response.status(500).send(JSON.stringify('Unknown error'));
+				}
+			})
+		});
+
+		app.put('/password', checkAccess, (req, response) => {
+			let login = req.body.login;
+			let service = req.body.service;
+			let password = req.body.password;
+			let newLogin = req.body.newLogin;
+			let newService = req.body.newService;
+			if( validate.checkEmptyAndXss([login, service, password, newLogin, newService]) ) {
+				api.addService(req.session.user_id, service, login, password, newService, newLogin, (result) => {
+					if (result) {
+						response.status(200).send(JSON.stringify('success'));
+					} else {
+						response.status(500).send(JSON.stringify('Unknown error'));
+					}
+				});
+			} else {
+				response.status(500).send('Wrong data');
+			}
+		});
 	});
 });
-
-
-

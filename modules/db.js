@@ -19,7 +19,7 @@ function init(callback) {
 	connection.connect((err) => {
 		if (err) throw err;
 		console.log("mysql connected");
-		if(callback) callback(sessionStore, session);
+		if(callback) callback(sessionStore, session, connection);
 	});
 
 	connection.on("error", (err) => {
@@ -34,62 +34,27 @@ function init(callback) {
 
 function query(sql, data, callback) {
 	connection.query(sql, data, (err, result) => {
-		if(err) throw err;
-		if(callback) callback(result);
+		if(err) console.error(err);
+		if(callback) callback(result, err);
 	});
 }
 
-function beginTransaction(callback) {
-	connection.beginTransaction((err) => {
+function oneQuery(sql, data, callback) {
+	let connection = mysql.createConnection(options);
+	connection.connect((err) => {
 		if (err) throw err;
-		if(callback) callback();
 	});
+
+	connection.query(sql, data, (error, results, fields) => {
+		if (error) throw error;
+		if(callback) callback(results, fields, error);
+	});
+
+	connection.end();
 }
-
-function commit(callback) {
-	connection.commit((err) => {
-		if (err) throw err;
-		if(callback) callback();
-	});
-}
-
-function rollback(callback) {
-	connection.rollback((err) => {
-		if (err) throw err;
-		if(callback) callback();
-	});
-}
-
-function end(callback) {
-	connection.end((err) => {
-		if (err) throw err;
-		if(callback) callback();
-	});
-}
-
-function prQuery (sql, data) {
-	return new Promise ((resolve, reject) => {
-		sql = sqlString.format(sql,data);
-		connection.query(sql, (err, res) => {
-			// console.log('ERROR');
-			// console.log(err);
-			// console.log(res);
-			if(err) {
-
-				reject(err);
-			} else {
-				resolve(res);
-			}
-		});
-	});
-};
 
 module.exports = {
 	init: init,
 	query: query,
-	beginTransaction: beginTransaction,
-	rollback: rollback,
-	commit: commit,
-	end: end,
-	prQuery: prQuery,
+	oneQuery: oneQuery,
 };

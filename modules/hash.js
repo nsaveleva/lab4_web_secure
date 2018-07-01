@@ -24,8 +24,20 @@ function hashNotEmpty(hash) {
 	}
 }
 
+function genSalt (length = 12) {
+	return crypto.randomBytes(256).toString('hex').substring(0, length);
+}
+
+function genHashWithSalt(password) {
+	let salt = genSalt();
+	let hash = crypto.createHmac('sha256', salt)
+		.update(password)
+		.digest('hex');
+	return salt + ':' + hash;
+}
 
 module.exports = {
 	checkPassword: checkPassword,
 	hashNotEmpty: hashNotEmpty,
+	genHashWithSalt: genHashWithSalt,
 }
