@@ -15,7 +15,7 @@ $(document).ready( () => {
 		type: "GET",
 		contentType: 'application/json; charset=UTF-8',
 		success: (res) => {
-			let passwords = JSON.parse(res);
+			let passwords = res;
 			initApp(passwords);
 		},
 		error: () => {
@@ -244,8 +244,7 @@ function auth () {
 			data: JSON.stringify(auth),
 			contentType: 'application/json; charset=UTF-8',
 
-			success: (res) => {
-				let response = JSON.parse(res);
+			success: (response) => {
 				let passwords = response['passwords'];
 				let privateKey = response['privateKey'];
 				localStorage.setItem('key', CryptoJS.AES.decrypt(privateKey, password).toString(CryptoJS.enc.Utf8));
