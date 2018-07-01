@@ -17,6 +17,10 @@ app.use( (err, req, res, next) =>  {
 	res.status(500).send('Backend Error');
 });
 
+app.use( (req, res, next) => {
+	res.header("Content-Type", "application/json; charset=UTF-8");
+	next();
+});
 
 function checkAccess(req, res, next) {
 	if (req.session.user_id) {
