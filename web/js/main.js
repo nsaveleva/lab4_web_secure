@@ -1,7 +1,17 @@
+
+let apiUrl;
+let host = window.location.host.split(':')[0];
+let port = window.location.host.split(':')[1] || '';
+
+if(host == 'local.saveleva.lab4') {
+	apiUrl = window.location.protocol + '//' + host + ':' + port;
+} else {
+	apiUrl =  window.location.protocol + '//' + 'saveleva.ml';
+}
 // load page done
 $(document).ready( () => {
 	$.ajax({
-		url: "/passwords",
+		url: apiUrl +  "/passwords",
 		type: "GET",
 		contentType: 'application/json; charset=UTF-8',
 		success: (res) => {
@@ -22,7 +32,7 @@ function initApp (passwords) {
 	$('#logout').click( (e) => {
 		e.preventDefault();
 		$.ajax({
-			url: "/auth",
+			url: apiUrl +  "/auth",
 			type: "DELETE",
 			contentType: 'application/json; charset=UTF-8',
 			success: () => {
@@ -87,7 +97,7 @@ function initApp (passwords) {
 			let login = $('#add_login')[0].value;
 			let password = $('#add_password')[0].value;
 			$.ajax({
-				url: "/password",
+				url: apiUrl +  "/password",
 				type: "PUT",
 				contentType: 'application/json; charset=UTF-8',
 				data: JSON.stringify({
@@ -127,7 +137,7 @@ function renderMainApp (passwords) {
 				let service = $('#service_' + i)[0].value;
 				let login = $('#login_' + i)[0].value;
 				$.ajax({
-					url: "/password",
+					url: apiUrl +  "/password",
 					type: "DELETE",
 					contentType: 'application/json; charset=UTF-8',
 					data: JSON.stringify({
@@ -182,7 +192,7 @@ function savePassword (passwords, i) {
 	let oldLogin = passwords[i]['login'];
 	let oldPassword = passwords[i]['password'];
 	$.ajax({
-		url: "/password",
+		url: apiUrl +  "/password",
 		type: "PUT",
 		contentType: 'application/json; charset=UTF-8',
 		data: JSON.stringify({
@@ -220,7 +230,7 @@ function auth () {
 		let password = $('#login_password')[0].value;
 		let auth = {'login': login, 'password': password};
 		$.ajax({
-			url: "/auth",
+			url: apiUrl +  "/auth",
 			type: "POST",
 			data: JSON.stringify(auth),
 			contentType: 'application/json; charset=UTF-8',
