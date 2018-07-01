@@ -17,10 +17,6 @@ app.use( (err, req, res, next) =>  {
 	res.status(500).send('Backend Error');
 });
 
-app.use( (req, res, next) => {
-	res.header("Access-Control-Allow-Origin", "*");
-	next();
-});
 
 function checkAccess(req, res, next) {
 	if (req.session.user_id) {
