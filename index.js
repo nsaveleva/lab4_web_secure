@@ -19,7 +19,7 @@ app.use( (err, req, res, next) =>  {
 
 app.use( (req, res, next) => {
 	res.header("Content-Type", "application/json; charset=UTF-8");
-	let re = new RegExp("^https?://(local\.saveleva\.lab4|saveleva\.com)");
+	let re = new RegExp("^https?://(local\.saveleva\.lab4|saveleva\.com|nsaveleva\.github\.io')");
 	if( re.test(req.headers.origin) ) {
 		console.log('SET HEADER');
 		res.header("Access-Control-Allow-Origin", req.headers.origin);
