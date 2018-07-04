@@ -10,6 +10,7 @@
     <script>
         //Loader
         let uri = window.location.pathname;
+		uri = uri.substring(0, uri.lastIndexOf('/')) + "/";
         if(uri == '/') {uri = '';}
         //css Loads
         let cssFiles = [
