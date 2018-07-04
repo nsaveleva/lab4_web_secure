@@ -49,47 +49,32 @@ function initApp (passwords) {
 
 	renderMainApp(passwords);
 
-	$('#search_input').focus( () => {
-		$('#search_input')[0].value = '';
-	});
-
 	$('#search_input').keyup( () => {
 		let searchStr = $('#search_input')[0].value.toLowerCase();
 		let findPasswords = [];
 		if(searchStr.length == 0) {
-			renderMainApp(passwords)
+			renderMainApp(passwords, false)
 		} else {
 			passwords.forEach( (elem) => {
 				if(elem.service.toLowerCase().indexOf(searchStr) >= 0 || elem.login.toLowerCase().indexOf(searchStr) >= 0) {
 					findPasswords.push(elem);
 				}
 			});
-			renderMainApp(findPasswords);
+			renderMainApp(findPasswords, false);
 		}
 	});
 
 	$('#btn_add').click( (e) => {
 		e.preventDefault();
 		let popupTemplate = _.template($('#popup')[0].innerHTML);
-		$('.main_container').append(popupTemplate());
+		$('body').append(popupTemplate());
 
 		$('#btn_cancel').click( (e) => {
 			e.preventDefault();
 			$('.b-popup').remove();
 		});
-		$('#add_service').focus( () => {
-			$('#add_service')[0].value = '';
-		});
 
 		$('#add_service').focus();
-
-		$('#add_login').focus( () => {
-			$('#add_login')[0].value = '';
-		});
-
-		$('#add_password').focus( () => {
-			$('#add_password')[0].value = '';
-		});
 
 		$('#btn_add_password').click( (e) => {
 			e.preventDefault();
@@ -110,6 +95,7 @@ function initApp (passwords) {
 				success: () => {
 					console.log('Add success');
 					passwords.push({'service': service, 'login': login, 'password': password});
+					console.log(passwords);
 					renderMainApp(passwords, false);
 					$('.b-popup').remove();
 				},
@@ -129,14 +115,16 @@ function renderMainApp (passwords, encrypt = true) {
 		password = privateKey.decrypt(password);
 		return password;
 	}
-	$('.entries').empty();
+	$('#entries').empty();
 	let oneEntryTemplate = _.template($('#one_entry_password')[0].innerHTML);
 		passwords.forEach((service, i) => {
-			if(_.isEmpty(service)) {return;}
+			if(_.isEmpty(service)) {
+				return;
+			}
 			if(encrypt) {
 				service.password = decryptPassword(service.password);
 			}
-			$('.entries').append(oneEntryTemplate({service: service, numberOfElement: i}));
+			$('#entries').append(oneEntryTemplate({service: service, numberOfElement: i}));
 			$('#btn_save_' + i).click((e) => {
 				e.preventDefault();
 				savePassword(passwords, i);
@@ -155,11 +143,8 @@ function renderMainApp (passwords, encrypt = true) {
 					}),
 					success: () => {
 						console.log('Delete success');
-						if ($('#form_' + i).parent().next()[0].tagName == 'BR') {
-							$('#form_' + i).parent().next().remove();
-						}
-						$('#form_' + i).parent().remove();
-						passwords[i] = null;
+						$('#form_' + i).remove();
+						passwords.splice(i,1);
 					},
 					error: (err) => {
 						console.error('Delete error');
@@ -186,8 +171,13 @@ function renderMainApp (passwords, encrypt = true) {
 				e.preventDefault();
 				if ($('#password_' + i)[0].type == 'password') {
 					$('#password_' + i)[0].type = 'text';
+					$('#btn_show_' + i).removeClass('glyphicon-eye-close');
+					$('#btn_show_' + i).addClass('glyphicon-eye-open');
+
 				} else {
 					$('#password_' + i)[0].type = 'password';
+					$('#btn_show_' + i).removeClass('glyphicon-eye-open');
+					$('#btn_show_' + i).addClass('glyphicon-eye-close');
 				}
 			});
 		});
@@ -254,24 +244,13 @@ function auth () {
 			error: (res) => {
 				auth = null; login = null; password = null; //clean secure data
 				if(res.status == 401) {
-					$('.main_container').append('<p id="notification">Неверные логин и пароль</p>');
+					$('#notification')[0].textContent = 'Неверные логин и пароль';
+				} else if(res.status == 503) {
+					$('#notification')[0].textContent = 'Вы превысили лимит попыток';
 				} else {
-					$('.main_container').append('<p id="notification">Неизвестная ошибка сервера</p>');
+					$('#notification')[0].textContent = 'Неизвестная ошибка сервера';
 				}
 			}
 		});
-	});
-
-	$('#login_field').focus( () => {
-		let login_field = $('#login_field');
-		login_field[0].value = '';
-		login_field.removeClass('login_input');
-
-	});
-
-	$('#login_password').focus( () => {
-		let login_password = $('#login_password');
-		login_password[0].value = '';
-		login_password.removeClass('login_input');
 	});
 }

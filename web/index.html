@@ -3,82 +3,126 @@
 <head>
     <meta charset="UTF8">
     <title>Лабороторная 4</title>
-    <link rel='stylesheet' href="/css/main.css">
 </head>
 <body>
-    <div class="main_container"></div>
+    <div class="container main_container"></div>
 
-    <script src="/js/lib/jquery-3.3.1.min.js"></script>
-    <script src="/js/lib/lodash.min.js"></script>
-    <script src="/js/lib/crypto-js.min.js"></script>
-    <script src="/js/lib/forge.min.js"></script>
-    <script src="/js/main.js"></script>
+    <script>
+        //Loader
+        let uri = window.location.pathname;
+        if(uri == '/') {uri = '';}
+        //css Loads
+        let cssFiles = [
+			"/css/bootstrap.min.css",
+			"/css/main.css",
+        ];
+		cssFiles.forEach( (c) => {
+			let css = document.createElement('link');
+			css.rel = 'stylesheet';
+			css.href = uri + c;
+			let head = document.getElementsByTagName('head');
+			head[0].appendChild(css);
+        });
+
+		// js loads
+        let scripts = [
+			"/js/lib/jquery-3.3.1.min.js",
+			"/js/lib/bootstrap.min.js",
+			"/js/lib/lodash.min.js",
+			"/js/lib/crypto-js.min.js",
+			"/js/lib/forge.min.js",
+			"/js/main.js",
+        ];
+        scripts.forEach( (s) => {
+			let script = document.createElement('script');
+			script.src = uri + s;
+			script.async = false;
+			let body = document.getElementsByTagName('body');
+			body[0].appendChild(script);
+        });
+    </script>
+
 
     <!--Templates-->
-
     <!--Popup Window-->
     <script type="text/template" id="popup">
         <div class="b-popup">
-            <div class="b-popup-content">
+            <div class="col-md-4"></div>
+            <div class="b-popup-content col-md-4">
                 <form class="form_popup">
-                    Сервис: <input type="text" name="service" value="service" id="add_service"><br>
-                    Логин: <input type="text" name="login" value="login" id="add_login"><br>
-                    Пароль: <input type="password" name="password" value="password" id="add_password"><br>
-                    <button class="btn_add" id="btn_add_password">Добавить</button>
-                    <button class="btn_cancel" id="btn_cancel">Отменить</button>
+                    <input type="text" name="service" placeholder="Service" id="add_service"><br>
+                    <input type="text" name="login" placeholder="Login" id="add_login"><br>
+                    <input type="password" name="password" placeholder="Password" id="add_password"><br>
+                    <button class="default_button btn_add" id="btn_add_password">Добавить</button>
+                    <button class="default_button btn_cancel" id="btn_cancel">Отменить</button>
                 </form>
             </div>
+            <div class="col-md-4"></div>
         </div>
     </script>
 
     <!--Auth template-->
     <script type="text/template" id="auth_app">
-        <form id="login_form" method="" action="">
-            <input class="login_input" id="login_field" type="text" name="login" value=login><br>
-            <input class="login_input" id="login_password" type="password" name="password" value=password><br>
-            <input id="login_submit" type="submit" value="Sign in">
-        </form>
+        <div class="row">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+                <form id="login_form" method="" action="">
+                    <div class="row"><label for="uname"><b>Username</b></label></div>
+                    <div class="row"><input class="login_input" id="login_field" type="text" name="login" placeholder="Enter Username" required></div>
+                    <div class="row"><label for="psw"><b>Password</b></label></div>
+                    <div class="row"><input class="login_input" id="login_password" type="password" name="password"  placeholder="Enter Password" required></div>
+                    <div class="row">
+                        <button class="default_button" id="login_submit" type="submit">Login</button>
+                    </div>
+                </form>
+                <div id="notification"></div>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
     </script>
 
     <!--Main App Template-->
     <script type="text/template" id="main_app">
-        <form>
-            <p>Поиск: <input type="text" id="search_input" name="search" value="service"></p>
-        </form>
-        <button id="logout">Выйти</button>
-        <div>
-            <div>
-                <b>Сервис</b>
-                <b>Логин</b>
-                <b>Пароль</b>
+        <div class="row">
+            <div class="col-md-8">
+                <form>
+                    <div class="row"><input type="text" id="search_input" name="search" placeholder="Service"></div>
+                </form>
             </div>
-            <br>
-            <div class="entries">
+            <div class="col-md-4">
+                <button class="default_button btn_radius" id="logout"><i class="glyphicon glyphicon-log-out"></i> Выйти</button>
             </div>
-        </div> <!--end layer-->
-        <button id="btn_add">Добавить</button>
+        </div>
+        <div id="entries">
+        </div>
+        <div class="col-md-8"></div>
+        <div class="btn_add col-md-4"><button class="default_button" id="btn_add">Добавить</button></div>
     </script>
 
     <!--One entry Template-->
     <script type="text/template" id="one_entry_password">
-        <div>
+
             <form class="form_entry" id="form_<%= numberOfElement %>">
-                <input type="text" name="service" value="<%= service.service %>" id="service_<%= numberOfElement %>">
-                <input type="text" name="login" value="<%= service.login %>" id="login_<%= numberOfElement %>">
-                <input type="password" name="password" value="<%= service.password %>" id="password_<%= numberOfElement %>">
-                <button class="btn_show" id="btn_show_<%= numberOfElement %>">
-                    &#128065;
-                </button>
-                <button class="btn_copy" id="btn_copy_<%= numberOfElement %>">
-                    <svg viewBox="0 0 14 16" version="1.1" width="14" height="16" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M2 13h4v1H2v-1zm5-6H2v1h5V7zm2 3V8l-3 3 3 3v-2h5v-2H9zM4.5 9H2v1h2.5V9zM2 12h2.5v-1H2v1zm9 1h1v2c-.02.28-.11.52-.3.7-.19.18-.42.28-.7.3H1c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h3c0-1.11.89-2 2-2 1.11 0 2 .89 2 2h3c.55 0 1 .45 1 1v5h-1V6H1v9h10v-2zM2 5h8c0-.55-.45-1-1-1H8c-.55 0-1-.45-1-1s-.45-1-1-1-1 .45-1 1-.45 1-1 1H3c-.55 0-1 .45-1 1z"></path>
-                    </svg>
-                </button>
-                <button class="btn_save" id="btn_save_<%= numberOfElement %>">Сохранить</button>
-                <button class="btn_delete" id="btn_delete_<%= numberOfElement %>">Удалить</button>
+                <div class="row">
+                    <div class="col-md-3"><input class="form-control" type="text" name="service" value="<%= service.service %>" id="service_<%= numberOfElement %>"></div>
+                    <div class="col-md-3"><input class="form-control" type="text" name="login" value="<%= service.login %>" id="login_<%= numberOfElement %>"></div>
+                    <div class="col-md-3">
+                        <div class="form-group has-feedback">
+                            <input class="form-control" type="password" name="password" value="<%= service.password %>" id="password_<%= numberOfElement %>">
+                            <i class="glyphicon glyphicon-eye-close form-control-feedback eye" id="btn_show_<%= numberOfElement %>"></i>
+                            <svg id="btn_copy_<%= numberOfElement %>" class="form-control-feedback copy-icon" version="1.1" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M2 13h4v1H2v-1zm5-6H2v1h5V7zm2 3V8l-3 3 3 3v-2h5v-2H9zM4.5 9H2v1h2.5V9zM2 12h2.5v-1H2v1zm9 1h1v2c-.02.28-.11.52-.3.7-.19.18-.42.28-.7.3H1c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1h3c0-1.11.89-2 2-2 1.11 0 2 .89 2 2h3c.55 0 1 .45 1 1v5h-1V6H1v9h10v-2zM2 5h8c0-.55-.45-1-1-1H8c-.55 0-1-.45-1-1s-.45-1-1-1-1 .45-1 1-.45 1-1 1H3c-.55 0-1 .45-1 1z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="col-md-1">
+                        <i class="icon_save glyphicon glyphicon-save" id="btn_save_<%= numberOfElement %>"></i>
+                    </div>
+                    <div class="col-md-1">
+                        <i class="icon_trash glyphicon glyphicon-trash" id="btn_delete_<%= numberOfElement %>"></i>
+                    </div>
+                </div>
             </form>
-        </div>
-        <br>
     </script>
 </body>
 </html>

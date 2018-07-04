@@ -28,3 +28,72 @@
     border-radius:5px;
     box-shadow: 0px 0px 10px #000;
 }
+
+input[type=text], input[type=password] {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+/* Set a style for all buttons */
+.default_button {
+    background-color: #4CAF50;
+    color: white;
+    width: 100px;
+    padding: 13px 20px;
+    margin: 8px 0;
+    border: none;
+    cursor: pointer;
+}
+
+#login_submit {
+    width: 100%;
+}
+
+.eye {
+    top: 8px;
+    right: 20px;
+    cursor: pointer;
+    pointer-events: all;
+}
+
+.copy-icon {
+    top: 15px;
+    right: -12px;
+    cursor: pointer;
+    pointer-events: all;
+}
+
+.icon_save {
+    top: 15px;
+    cursor: pointer;
+    pointer-events: all;
+    padding-right: 3px;
+    padding-left: 3px;
+}
+
+.icon_trash {
+    top: 15px;
+    right: 70px;
+    color: red;
+    cursor: pointer;
+    pointer-events: all;
+    padding-right: 3px;
+    padding-left: 3px;
+}
+
+.default_button:hover {
+    opacity: 0.8;
+}
+
+.container {
+    padding: 30px;
+}
+
+.col-md-3 {
+    padding-right: 3px;
+    padding-left: 3px;
+}
