@@ -77,10 +77,13 @@ function checkUser(userId, password, callback) {
 ```
 В переменные `userId` и `password` попадают данные из формы авторизации:
 ![sql_inject1](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/sql_inject1.jpg)
+
 То есть предположительно должен выполниться указанный запрос, и он бы сработал как указано на следующем скрине:
 ![sql_inject2](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/sql_inject2.jpg)
+
 То есть нам удалось успешно выполнить не предусмотренный SQL запрос. Теперь посмотрим, что происходит на самом деле:
 ![sql_inject3](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/sql_inject3.jpg)
+
 Как видно из журнала базы данных, все что было в поле **username** попало в плейсхолдер и окаозалось просто паремтром с которым сравнивается колонка **user_id**, все ковычки экранированы как и положено. И данный запрос конечно ничего не вернет:
 ![sql_inject4](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/sql_inject4.jpg)
 
