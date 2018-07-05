@@ -1,10 +1,10 @@
 # Лабороторная работа №4
 ## Ссылки
-Сервер проекта развёрнут в одном месте, но клиентская часть доступна в двух местах:
+Клиентская часть приложения доступна по ссылкам:
 * https://nsaveleva.github.io/lab4_web_secure/web/
 * https://saveleva.ml/
 
-Сам сервер находится на сервере saveleva.ml
+Серверная часть находится распологается на сервере saveleva.ml.
 
 ## Постановка задачи
 * Задача: "Создать защищенное веб-приложение"
@@ -92,16 +92,17 @@ function checkUser(userId, password, callback) {
 Как видно из журнала базы данных, все что было в поле **username** попало в плейсхолдер и окаозалось просто пареметром с которым сравнивается колонка **user_id**, все ковычки экранированы как и положено. И данный запрос конечно ничего не вернет:
 ![sql_inject4](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/sql_inject4.jpg)
 
-**Вывод**: используете подготовленные выражения, не формируйте SQL запросы из входных данных. За это бьют палками!
+**Вывод**: используете подготовленные выражения, не формируйте **SQL** запросы из входных данных. За это бьют палками!
 
 ### Перебор пароля
 Злоумышленник может попробовать перебрать пароль к приложению, например посмотрев каким образом происходит авторизация:
-![brute1](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/brute1.jpg) ![brute2](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/brute2.jpg)
+![brute1](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/brute1.jpg)
+![brute2](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/brute2.jpg)
 
 Но тут он столкнется с ограничением количества попыток авторизации:
 ![brute3](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/brute3.jpg)
 
-Как видно из скрина, после нескольких попыток авторизации, веб-сервер возвращает 503 ошибку. Реализовано это на уровне веб-сервера nginx. С помощью опций **limit_req_zone** и **limit_req** (подробнее можно узнать из [документации](http://nginx.org/en/docs/http/ngx_http_limit_req_module.html)) в [конфигурации nginx](docker/nginx/default.conf):
+Как видно из скрина, после нескольких попыток авторизации, веб-сервер возвращает **503** ошибку. Реализовано это на уровне веб-сервера **nginx**. С помощью опций **limit_req_zone** и **limit_req** (подробнее можно узнать из [документации](http://nginx.org/en/docs/http/ngx_http_limit_req_module.html)) в [конфигурации nginx](docker/nginx/default.conf):
 ```nginx
 limit_req_zone $binary_remote_addr zone=auth_limit:1m rate=5r/m;
 ...
@@ -119,5 +120,5 @@ server {
 ```
 
 ### XSS
-Авторизоаванный в веб-приложении злоумышленник может попробовать атаковать пользователя с помощью XSS атаки.
+Авторизоаванный в веб-приложении злоумышленник может попробовать атаковать пользователя с помощью **XSS** атаки.
 
