@@ -1,4 +1,1 @@
 [mysqld]
-binlog_format = STATEMENT
-log_bin = /var/log/mysql/mysql-bin.log
-max_binlog_size = 128M
