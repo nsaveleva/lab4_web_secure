@@ -76,7 +76,7 @@ function initApp (passwords) {
 
 		$('#add_service').focus();
 
-		$('#btn_add_password').submit( (e) => {
+		$('#btn_add_password').click( (e) => {
 			e.preventDefault();
 			let service = $('#add_service')[0].value;
 			let login = $('#add_login')[0].value;
@@ -93,10 +93,11 @@ function initApp (passwords) {
 					'password': password
 				}),
 				success: () => {
+					$('.b-popup').remove();
 					passwords.push({'service': service, 'login': login, 'password': password});
 					console.log('Add success');
 					renderMainApp(passwords, false);
-					$('.b-popup').remove();
+
 				},
 				error: (err) => {
 					console.error('Add error');
