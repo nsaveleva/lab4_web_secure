@@ -1,6 +1,6 @@
 # Лабороторная работа №4
 ## Ссылки
-Сервер проекта разврнут в одном месте, но клиентская часть доступна в двух местах:
+Сервер проекта развёрнут в одном месте, но клиентская часть доступна в двух местах:
 * https://nsaveleva.github.io/lab4_web_secure/web/
 * https://saveleva.ml/
 
@@ -54,3 +54,35 @@
 * [underscore](https://www.npmjs.com/package/underscore) библоитека с полезными и удобыми методами
 * [crypto-js](https://github.com/brix/crypto-js) использовала для AES шифрования
 * [node-forge](https://github.com/digitalbazaar/forge) использовала алгоритмы асинхронного RSA шифрования
+
+### Схема работы
+Это SPA(single page application) приложение. То есть загружается клиентская часть, и полностью управляет страницей без перегрузок. Для получаения данных от сервера, приложение отправляет **AJAX** запросы. Сервер в свою очередь предоставляет **API** для извлечения и изминения данных.
+
+
+## Анализ безопаности
+### SQL инъекции
+
+Все запросы к базе данных выполняются через подготовленные запросы (сейчас до сих пор кто-то делает по другому, и их не бьют палками?). А данные подставляются в них через плейсхолдеры. Поэтому SQL инъекции невозможны в этом приложении. В качестве примера давайте рассмотрим авторизацию в приложении.
+Проверку того, что пользователь есть в базе, и пароль его совпдадает с введенным, осуществляет функция ([из файла api.js](modules/api.js)):
+```javascript
+function checkUser(userId, password, callback) {
+	db.query('SELECT hash FROM users WHERE user_id = ?', [userId], (result) => {
+		if(hash.hashNotEmpty(result)) {
+			return callback(hash.checkPassword(password,result[0].hash));
+		} else {
+			callback(false);
+		}
+	});
+}
+```
+В переменные `userId` и `password` попадают данные из формы авторизации:
+![sql_inject1](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/sql_inject1.jpg)
+То есть предположительно должен выполниться указанный запрос, и он бы сработал как указано на следующем скрине:
+![sql_inject2](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/sql_inject2.jpg)
+То есть нам удалось успешно выполнить не предусмотренный SQL запрос. Теперь посмотрим, что происходит на самом деле:
+![sql_inject3](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/sql_inject3.jpg)
+Как видно из журнала базы данных, все что было в поле **username** попало в плейсхолдер и окаозалось просто паремтром с которым сравнивается колонка **user_id**, все ковычки экранированы как и положено. И данный запрос конечно ничего не вернет:
+![sql_inject4](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/sql_inject4.jpg)
+
+Вывод: используете подготовленные выражения, не формируйте SQL запросы из входных данных. За это нужно бить палками!
+
