@@ -74,7 +74,6 @@ function addService(userId, service, login, password, newService, newLogin, call
 			callback(false);
 		}
 	});
-
 }
 
 function getPrivateKey(userId, callback) {

