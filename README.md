@@ -11,8 +11,8 @@
         - [Клиент](#Клиент)
             - [Дополнительные библоитеки css](#Дополнительные-библоитеки-css)
             - [Дополнительные библиотеки javascript](#Дополнительные-библиотеки-javascript)
-        - [Сервер (бэкенд)](#Сервер-(бэкенд))
-            - [Дополнительные библиотеки javascript (nodejs)](#Дополнительные-библиотеки-javascript-(nodejs))
+        - [Сервер (бэкенд)](#Сервер)
+            - [Дополнительные библиотеки javascript (nodejs)](#Дополнительные-библиотеки-javascript)
     - [Схема работы](#Схема-работы)
     
 * [Анализ безопаности](#Анализ-безопаности)
@@ -58,14 +58,14 @@
 * [crypto-js](https://github.com/brix/crypto-js) использовала для AES шифрования
 * [forge](https://github.com/digitalbazaar/forge) использовала алгоритмы асинхронного RSA шифрования
 
-#### Сервер (бэкенд)
+#### Сервер
 
 * **javascript** (nodejs) на веб-фреймворке [expressjs](https://expressjs.com/)
 * **nginx** - веб-сервер
 * **mysql** - база данных
 * **docker** - приложение развертывается внутри контейнеров **docker**
 
-##### Дополнительные библиотеки javascript (nodejs)
+##### Дополнительные библиотеки javascript
 
 * [mysql](https://www.npmjs.com/package/nodejs-mysql) для работы с базой данных
 * [express-session](https://www.npmjs.com/package/express-session) сессии в **expressjs**
