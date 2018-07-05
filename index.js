@@ -2,7 +2,9 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const helmet = require('helmet'); //security
+const cors = require('cors');
 const _ = require('underscore');
+
 
 const CONFIG = require('./config.json');
 const api = require('./modules/api');
@@ -10,6 +12,7 @@ const db = require('./modules/db');
 const validate = require('./modules/validate');
 
 const PORT = process.env.PORT || CONFIG.port;
+app.use(cors());
 app.use(bodyParser.json());
 app.use(helmet());
 app.use( (err, req, res, next) =>  {
